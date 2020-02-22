@@ -107,3 +107,16 @@ resources:
                   - "s3:PutObjectRetention"
                   - "s3:PutObjectTagging"
                 Resource: "arn:aws:s3:::rapido-invoice-store-stage/*"
+          - PolicyName: SQSAccess
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "sqs:SendMessage"
+                  - "sqs:DeleteMessage"
+                  - "sqs:GetQueueAttributes"
+                  - "sqs:GetQueueUrl"
+                  - "sqs:ListQueues"
+                  - "sqs:ReceiveMessage"
+                  - "sqs:SetQueueAttributes"
+                Resource: ${self:provider.sqs-queue-arn}
