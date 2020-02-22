@@ -1,0 +1,93 @@
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+trigger:
+  branches:
+    include:
+    - master
+    - feature/*
+    - bug/*
+  tags:
+    include:
+    - v*
+
+pr:
+  branches:
+    include:
+    - master
+
+steps:
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+
+- script: |
+    pip install setuptools
+    pip install awscli
+  displayName: 'Installing AWS CLI'
+
+- script: |
+    git clone https://github.com/elasticdog/transcrypt.git
+    cd transcrypt/
+    sudo ln -s ${PWD}/transcrypt /usr/local/bin/transcrypt
+    cd ../
+    transcrypt --yes -c aes-256-cbc -p $ENCRYPTED_BY_ME
+  displayName: 'Transcript Initialization'
+  env:
+    ENCRYPTED_BY_ME: $(ENCRYPTED_BY_ME)
+
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    command: install
+
+- task: Npm@1
+  displayName: 'npm run test'
+  inputs:
+    command: custom
+    customCommand: 'run test'
+
+- task: PublishTestResults@2
+  displayName: 'Publishing test results'
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: JUnit
+    testResultsFiles: '**/junit.xml'
+
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publishing code coverage'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+    reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
+
+- task: Npm@1
+  displayName: 'Deploying functions to DEV'
+  inputs:
+    command: custom
+    customCommand: 'run stage-deploy' # TODO: when we need 2 non-prod env "run dev-deploy"
+  env:
+    AWS_ACCESS_KEY_ID: $(DEV_AWS_ACCESS_KEY_ID)
+    AWS_SECRET_ACCESS_KEY: $(DEV_AWS_SECRET_ACCESS_KEY)
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+
+- task: Npm@1
+  displayName: 'Deploying functions to STAGE'
+  inputs:
+    command: custom
+    customCommand: 'run stage-deploy'
+  env:
+    AWS_ACCESS_KEY_ID: $(DEV_AWS_ACCESS_KEY_ID)
+    AWS_SECRET_ACCESS_KEY: $(DEV_AWS_SECRET_ACCESS_KEY)
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+
+- task: Npm@1
+  displayName: 'Deploying functions to PROD'
+  inputs:
+    command: custom
+    customCommand: 'run stage-deploy' # TODO: run prod-deploy
+  env:
+    AWS_ACCESS_KEY_ID: $(PROD_AWS_ACCESS_KEY_ID)
+    AWS_SECRET_ACCESS_KEY: $(PROD_AWS_SECRET_ACCESS_KEY)
+  condition: startsWith(variables['build.sourceBranch'], 'refs/tags/v')

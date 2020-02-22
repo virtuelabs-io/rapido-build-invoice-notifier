@@ -1,0 +1,109 @@
+service: rapido-build-invoice-notifier
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-2'}
+  invoice-bucket-name: ${file(./config/${self:provider.stage}.json):invoice-bucket-name}
+  sqs-queue-url: ${file(./config/${self:provider.stage}.json):sqs-queue-url}
+  sqs-queue-arn: ${file(./config/${self:provider.stage}.json):sqs-queue-arn}
+  logRetentionInDays: 7
+  vpc:
+    securityGroupIds: ${file(./config/${self:provider.stage}.json):securityGroupIds}
+    subnetIds: ${file(./config/${self:provider.stage}.json):subnetIds}
+package:
+  individually: true
+  excludeDevDependencies: true
+  exclude:
+    - test/**
+    - .git/**
+    - .serverless/**
+    - coverage/**
+    - README.md
+    - TODO.md
+    - LICENSE
+
+plugins:
+  - serverless-offline
+
+functions:
+  invoiceAndNotify:
+    name: invoiceAndNotify-${self:provider.stage}
+    role: InvoiceNotifierFunctionsLambdaRole
+    handler: src/processor/invoiceAndNotify.fun
+    memorySize: 512
+    timeout: 60
+    environment:
+      INVOICE_BUCKET_NAME: ${self:provider.invoice-bucket-name}
+      SQS_QUEUE_URL: ${self:provider.sqs-queue-url}
+      SQS_QUEUE_ARN: ${self:provider.sqs-queue-arn}
+      REGION: ${self:provider.region}
+    events:
+      - sqs:
+          arn: ${self:provider.sqs-queue-arn}
+          batchSize: 1
+
+
+resources:
+  Resources:
+    InvoiceNotifierFunctionsLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        Path: /
+        Policies:
+          - PolicyName: logs
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+          - PolicyName: lambda
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+          - PolicyName: VPCAccess
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:DescribeNetworkInterfaces"
+                  - "ec2:DeleteNetworkInterface"
+                Resource: "*"
+          - PolicyName: InvoiceBucketAccess
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "s3:GetBucketAcl"
+                  - "s3:GetBucketCORS"
+                  - "s3:GetBucketLocation"
+                  - "s3:GetObject"
+                  - "s3:GetObjectAcl"
+                  - "s3:GetObjectTagging"
+                  - "s3:ListBucket"
+                  - "s3:PutBucketAcl"
+                  - "s3:PutBucketCORS"
+                  - "s3:PutBucketLogging"
+                  - "s3:PutBucketNotification"
+                  - "s3:PutBucketPolicy"
+                  - "s3:PutBucketTagging"
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                  - "s3:PutObjectRetention"
+                  - "s3:PutObjectTagging"
+                Resource: "arn:aws:s3:::rapido-invoice-store-stage/*"
