@@ -12,6 +12,11 @@ provider:
   cc: ${file(./config/${self:provider.stage}.json):cc}
   support: ${file(./config/${self:provider.stage}.json):support}
   email-from: ${file(./config/${self:provider.stage}.json):emailFrom}
+  host: ${file(./config/${self:provider.stage}.json):database.host}
+  port: ${file(./config/${self:provider.stage}.json):database.port}
+  database: ${file(./config/${self:provider.stage}.json):database.database}
+  username: ${file(./config/${self:provider.stage}.json):database.username}
+  password: ${file(./config/${self:provider.stage}.json):database.password}
   logRetentionInDays: 7
   vpc:
     securityGroupIds: ${file(./config/${self:provider.stage}.json):securityGroupIds}
@@ -51,6 +56,30 @@ functions:
       - sqs:
           arn: ${self:provider.sqs-queue-arn}
           batchSize: 1
+  customerErasure:
+    name: customerErasure-${self:provider.stage}
+    role: InvoiceNotifierFunctionsLambdaRole
+    handler: src/gdpr/customerErasure.fun
+    memorySize: 128
+    timeout: 30
+    environment:
+      HOST: ${self:provider.host}
+      PORT: ${self:provider.port}
+      DATABASE: ${self:provider.database}
+      USERNAME: ${self:provider.username}
+      PASSWORD: ${self:provider.password}
+  guestErasure:
+    name: guestErasure-${self:provider.stage}
+    role: InvoiceNotifierFunctionsLambdaRole
+    handler: src/gdpr/guestErasure.fun
+    memorySize: 128
+    timeout: 30
+    environment:
+      HOST: ${self:provider.host}
+      PORT: ${self:provider.port}
+      DATABASE: guests
+      USERNAME: ${self:provider.username}
+      PASSWORD: ${self:provider.password}
 
 
 resources:
