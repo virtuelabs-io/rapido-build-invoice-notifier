@@ -11,6 +11,7 @@ provider:
   organization: ${file(./config/${self:provider.stage}.json):organization}
   cc: ${file(./config/${self:provider.stage}.json):cc}
   support: ${file(./config/${self:provider.stage}.json):support}
+  email-from: ${file(./config/${self:provider.stage}.json):emailFrom}
   logRetentionInDays: 7
   vpc:
     securityGroupIds: ${file(./config/${self:provider.stage}.json):securityGroupIds}
@@ -36,7 +37,7 @@ functions:
     role: InvoiceNotifierFunctionsLambdaRole
     handler: src/processor/invoiceAndNotify.fun
     memorySize: 512
-    timeout: 60
+    timeout: 120
     environment:
       INVOICE_BUCKET_NAME: ${self:provider.invoice-bucket-name}
       SQS_QUEUE_URL: ${self:provider.sqs-queue-url}
@@ -45,6 +46,7 @@ functions:
       REGION: ${self:provider.region}
       CC: ${self:provider.cc}
       SUPPORT: ${self:provider.support}
+      EMAIL_FROM: ${self:provider.email-from}
     events:
       - sqs:
           arn: ${self:provider.sqs-queue-arn}
@@ -126,3 +128,17 @@ resources:
                   - "sqs:ReceiveMessage"
                   - "sqs:SetQueueAttributes"
                 Resource: ${self:provider.sqs-queue-arn}
+          - PolicyName: SESAccess
+            PolicyDocument:
+              Statement:
+                Effect: Allow
+                Action:
+                  - "ses:SendEmail"
+                  - "ses:SendRawEmail"
+                Resource:
+                  - "*"
+                Condition:
+                  StringEquals:
+                    ses:FromAddress:
+                      - ${self:provider.email-from}
+
