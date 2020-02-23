@@ -8,6 +8,9 @@ provider:
   invoice-bucket-name: ${file(./config/${self:provider.stage}.json):invoice-bucket-name}
   sqs-queue-url: ${file(./config/${self:provider.stage}.json):sqs-queue-url}
   sqs-queue-arn: ${file(./config/${self:provider.stage}.json):sqs-queue-arn}
+  organization: ${file(./config/${self:provider.stage}.json):organization}
+  cc: ${file(./config/${self:provider.stage}.json):cc}
+  support: ${file(./config/${self:provider.stage}.json):support}
   logRetentionInDays: 7
   vpc:
     securityGroupIds: ${file(./config/${self:provider.stage}.json):securityGroupIds}
@@ -38,7 +41,10 @@ functions:
       INVOICE_BUCKET_NAME: ${self:provider.invoice-bucket-name}
       SQS_QUEUE_URL: ${self:provider.sqs-queue-url}
       SQS_QUEUE_ARN: ${self:provider.sqs-queue-arn}
+      ORGANIZATION: ${self:provider.organization}
       REGION: ${self:provider.region}
+      CC: ${self:provider.cc}
+      SUPPORT: ${self:provider.support}
     events:
       - sqs:
           arn: ${self:provider.sqs-queue-arn}

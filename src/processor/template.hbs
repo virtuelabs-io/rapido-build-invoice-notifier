@@ -1,2 +1,62 @@
-<h1>{{ text }}</h1>
-<p>{{ title }}</p>
+<center>
+    <h1 style="color:#f2c811">{{ organization }}</h1>
+    <h2>
+        <u>{{ title }}</u>
+    </h2>
+</center>
+
+<table style="width:100%">
+  <tr>
+    <td style="width:40%">
+        <h3>Order details</h3>
+        <p align="left"><b>orderId:</b> #{{ orderId }}</p>
+        <p align="left"><b>Date:</b> {{ created_on }}</p>
+    </td>
+    <td style="width:20%"></td>
+    <td style="width:40%">
+        <h3>Delivery Address</h3>
+        <p align="left">{{ deliveryAddress.full_name }}</p>
+        <p align="left">{{ deliveryAddress.addr_1 }}</p>
+        <p align="left">{{ deliveryAddress.addr_2 }}</p>
+        <p align="left">{{ deliveryAddress.city }}, {{ deliveryAddress.county }}</p>
+        <p align="left">{{ deliveryAddress.country }}</p>
+        <p align="left">{{ deliveryAddress.postcode }}</p>
+    </td>
+  </tr>
+</table>
+</br>
+<h4>Order Details</h4>
+<table style="width:100%" cellpadding="10">
+  <tr bgcolor="#000000">
+    <th style="width:45%;color:#ffffff">Product Name</th>
+    <th style="width:5%;color:#ffffff">Quantity</th>
+    <th style="width:20%;color:#ffffff">Unit Price(£)</th>
+    <th style="width:30%;color:#ffffff">Total(£)</th>
+  </tr>
+  {{#each orderDetails}}
+  <tr>
+    <td style="width:45%" align="left">{{ this.product_id }}</td>
+    <td style="width:5%" align="center">{{ this.quantity }}</td>
+    <td style="width:20%" align="right">{{ this.unit_price }}</td>
+    <td style="width:35%" align="right">{{ this.total_price }}</td>
+  </tr>
+  {{/each}}
+  <tr bgcolor="#000000">
+    <th style="width:65%;color:#ffffff" align="left" colspan="3">Sub Total</th>
+    <th style="width:35%;color:#ffffff" align="right">£ {{ orderSummary.order_price }}</th>
+  </tr>
+  <tr bgcolor="#000000">
+    <th style="width:65%;color:#ffffff" align="left" colspan="3">Delivery cost</th>
+    <th style="width:35%;color:#ffffff" align="right">£ {{ orderSummary.delivery_cost }}</th>
+  </tr>
+  <tr bgcolor="#000000">
+    <th style="width:65%;color:#ffffff" align="left" colspan="3">VAT</th>
+    <th style="width:35%;color:#ffffff" align="right">£ {{ orderSummary.vat }}</th>
+  </tr>
+  <tr bgcolor="#000000">
+    <th style="width:65%;color:#ffffff" align="left" colspan="3">Total</td>
+    <th style="width:35%;color:#ffffff" align="right">£ {{ orderSummary.order_price_total }}</th>
+  </tr>
+</table>
+</br>
+<p style="color:#737373">Thank you for shopping with us! For any questions please reach out to <strong><i>{{ contact }}</i></strong>.</p>
