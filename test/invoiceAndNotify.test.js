@@ -1,5 +1,5 @@
 const util = require("util");
-const lambda = require("../../src/processor/invoiceAndNotify");
+const lambda = require("../src/processor/invoiceAndNotify");
 const handler = util.promisify(lambda.fun);
 
 describe(`Testing: InvoiceAndNotify`, () => {
