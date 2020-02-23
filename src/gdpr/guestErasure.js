@@ -15,7 +15,7 @@ module.exports.fun = async (event, context, callback) => {
     console.log(event)
     let email = event.body.email
     let query = `
-        CALL guests.erase_pii(UUID_TO_BIN(?));
+        CALL guests.erase_pii(?);
     `;
     console.log("Running query", query);
     let results = await mysql.query(query, [ email ])
