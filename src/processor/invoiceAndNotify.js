@@ -7,6 +7,7 @@ const handlebars = require("handlebars");
 
 AWS.config.update({ region: process.env.REGION });
 const s3 = new AWS.S3();
+const SES = new AWS.SES({region: "eu-west-1" });
 
 module.exports.fun = async (event, context, callBack) => {
   console.log("Processing message: ", event["Records"][0]["messageId"])
@@ -35,7 +36,8 @@ module.exports.fun = async (event, context, callBack) => {
         order_price: orderDetails[0]["order_price"],
         delivery_cost: orderDetails[0]["delivery_cost"],
     },
-    cc: process.env.CC
+    cc: process.env.CC,
+    emailFrom: process.env.EMAIL_FROM
   }
 
   console.log("data", data)
@@ -79,9 +81,34 @@ module.exports.fun = async (event, context, callBack) => {
 
     console.log("Writing file to S3")
     const s3PushStatus = await s3.putObject(s3Params).promise()
-
     console.log(s3PushStatus)
 
+    console.log("Sending email")
+    var sesParams = {
+        Destination: {
+            CcAddresses: data.cc.split(","),
+            ToAddresses: [ data.sendTo ]
+        },
+        Message: {
+            Body: {
+                Html: {
+                    Charset: "UTF-8",
+                    Data: html
+                }
+            },
+            Subject: {
+                Charset: 'UTF-8',
+                Data: "Rapidobuild Order: #" + data.orderId
+            }
+        },
+        Source: data.emailFrom,
+        ReplyToAddresses: [ data.contact ]
+    };
+    console.log(sesParams)
+    const sesStatus = await SES.sendEmail(sesParams).promise();
+
+    console.log(sesStatus)
+    console.log("Sending out success message")
     context.succeed({
         "StatusCode": 200
     });
