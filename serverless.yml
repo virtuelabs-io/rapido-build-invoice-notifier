@@ -59,6 +59,7 @@ functions:
   customerErasure:
     name: customerErasure-${self:provider.stage}
     role: InvoiceNotifierFunctionsLambdaRole
+    runtime: nodejs12.x
     handler: src/gdpr/customerErasure.fun
     memorySize: 128
     timeout: 30
@@ -71,6 +72,7 @@ functions:
   guestErasure:
     name: guestErasure-${self:provider.stage}
     role: InvoiceNotifierFunctionsLambdaRole
+    runtime: nodejs12.x
     handler: src/gdpr/guestErasure.fun
     memorySize: 128
     timeout: 30
