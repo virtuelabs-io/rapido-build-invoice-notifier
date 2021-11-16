@@ -16,7 +16,7 @@
   "author": "Sangram Reddy",
   "license": "ISC",
   "devDependencies": {
-    "aws-sdk": "^2.421.0",
+    "aws-sdk": "^2.814.0",
     "aws-sdk-mock": "^4.3.1",
     "codecov": "^3.2.0",
     "jest": "^24.5.0",
