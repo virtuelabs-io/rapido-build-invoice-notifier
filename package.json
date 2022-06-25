@@ -33,7 +33,7 @@
   "dependencies": {
     "https": "^1.0.0",
     "mysql": "^2.16.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.7",
     "serverless-mysql": "^1.2.1",
     "chrome-aws-lambda": "^2.0.0",
     "handlebars": "^4.5.1",
